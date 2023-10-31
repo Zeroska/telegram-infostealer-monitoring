@@ -1,5 +1,4 @@
-
 .env
-anon.session
-basic_grep.sh
 *session
+test.txt
+
