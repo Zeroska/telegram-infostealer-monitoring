@@ -1,4 +1,5 @@
 .env
 *session
 test.txt
+*.log
 
