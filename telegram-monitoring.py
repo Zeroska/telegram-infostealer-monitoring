@@ -1,4 +1,6 @@
 from telethon import TelegramClient, events, sync
+from telethon.tl.types import DocumentAttributeFilename, Message, MessageMediaDocument
+
 import asyncio
 import logging
 import os
@@ -14,7 +16,7 @@ load_dotenv(dotenv_path)
 api_hash = os.getenv("api_hash")
 api_id = os.getenv("api_id")
 phone_number = os.getenv("phone_number")
-
+download_path = os.getenv("download_path")
 
 client = TelegramClient('anon', api_id, api_hash)
 # Start the client
@@ -37,9 +39,7 @@ async def downloadTXTFile(event):
 			file_name = event.message.media.document.attributes[0].file_name
 			if ".txt" in event.message.media.document.attributes[0].file_name:
 				chat = await event.get_chat()
-				print(chat.title)
-				
-				path = await client.download_media(event.message.media,f"D:\\Leaked Data Logs\\{file_name}",progress_callback=callback)
+				path = await client.download_media(event.message.media,f"{download_path}{file_name}",progress_callback=callback)
 				print("File success fully downloaded at " + str(path))
 			else:
 				print("[*] New Media but not .txt")
