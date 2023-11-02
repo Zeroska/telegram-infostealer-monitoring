@@ -35,6 +35,7 @@ keywords_filter_list = []
 
 
 def lines_that_equal(line):
+	# TODO: Allow user to specify the keyword by using .env or by using argument to the script not by modify the code 
 	word_list = ['opswat.com','@hdbank.com','zeroska.dev@gmail.com','@rootgroup','eolianenergy.com']
 	for key in word_list:
 		if key in line:
@@ -71,15 +72,22 @@ def compress_file_handler(file_name, file_path):
 # You can disable this function as you plesase, if you send your log to another place - Khuong
 async def output_monitored_dataleak(downloaded_files):
 	try: 
-		for line in fileinput.input([downloaded_files]):
+		logging.info("File downloaded and checking for data leak")
+		print("[*] File downloaded and checking for data leak")
+		for line in fileinput.input([downloaded_files], encoding="utf8"):
 				if lines_that_equal(line):
-					print("[*] Data leaked Found")
-
+					print(f"[*] Data leaked found: {line}")
+					logging.info(f"Data leaked found: {line}")
 					# You can output it to another channel (teams chat, telegram chat or discord by using webhook)
 					with open("leaked.txt","w") as data:
 						data.write(str(line))
+						data.close()
+		fileinput.close()
+		logging.info("Checking successfully and found nothing")
+		print("[*] Checking successfully and found nothing")
 	except Exception as e:
-		logging.info(f"Error: {e}")
+		fileinput.close()
+		logging.info(f"output_monitored_dataleak error: {e}")
 
 def callback(current, total):
     print('Downloaded', current, 'out of', total, 'bytes: {:.2%}'.format(current / total))
@@ -88,7 +96,7 @@ def callback(current, total):
 async def downloadTXTFile(event: Message):
 	try: 
 		# we use event.message.media.document because we only want the file not other media such as Photo or anything just file 
-		print("[*] New Message Recieved")
+		print(f"[*] New Message Recieved")
 		if event.message.media is not None:
 			print(event.message.media.document)
 			print("File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
@@ -102,12 +110,15 @@ async def downloadTXTFile(event: Message):
 				
 				# if ".rar" or ".zip" in file_name:
 				# 	compress_file_handler(file_name, leak_download_path)
-				
-				await output_monitored_dataleak(leak_download_path)
-				logging.info("File success fully downloaded at " + str(leak_download_path))
-			else:
-				logging.info("[*] New Media but not .txt or .csv")
+		
+				print(f"[*] File Name: {file_name}")
 				logging.info(f"File Name: {file_name}")
+				logging.info("File successfully downloaded at: " + str(leak_download_path))		
+
+				await output_monitored_dataleak(leak_download_path)		
+			else:
+				logging.info("[*] New Media but not .txt, .csv, .rar, .zip")
+				
 	except Exception as e:
 		logging.error(f"Exception: {e}" )
 	
