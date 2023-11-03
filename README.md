@@ -1,5 +1,12 @@
 # Telegram infostealer monitoring (private project)
 
+## TODO
+- [ ] Compressed file handle -> RAR, ZIP: Ongoing
+- [ ] Compressed file with password : Ongoing
+- [ ] Extract Stealer Information
+- [ ] Adding more telegram dork and google dork
+- [ ] Remove hardcoded search keyword 
+
 ## Installation
 Require using python3, to install package that required please run the command below after clone the repo
 
@@ -17,7 +24,7 @@ api_id="your_app_id"
 phone_number = "your_phone_number"
 download_path="path"
 ```
-
+**Download path is the path that you will store the leak data you crawl from the telegram channel**
 
 ## Russian Info Stealer 
 
@@ -41,6 +48,28 @@ Here are the few telegram channel that has the above information: (the list will
 - https://t.me/urllogpas -> 
 - https://t.me/fr33d4t4
 - https://t.me/baseleak
+- https://t.me/llinkcloud -> Logs with GB of data, but base 2020-2022 -> still good
+- https://t.me/breachdetector (Dark web monitoring and logs) -> good channels
+
+# How to find these channel or Telegram channel in general
+- https://telegra.ph/Tips-how-to-find-private-hidden-personal-groups-and-channels---TelegramPrivateChatLeaks-08-10
+In this post there are few thing I like about it
+- About the invitation link of Telegram 
+- Using google dork, and telegram dork to find channel that private
+
+Combine with the keyword and understanding of Telegram channel URL we can craft few dork to search for these leak channel. There are some basic search queries:
+- site:t.me/joinchat access
+- site:t.me/joinchat logs
+- site:t.me/joinchat txt 
+- site:t.me/joinchat 
+- intext:t.me/ 
+- intext:t.me/joinchat {keyword}
+- site:t.me/ {keyword}
+
+Some keyword that might relevant: 
+redline, logs, cloudlogs, logsfree, free logs, hacking software, rat, ddos, trojan, 
+botnet, infect, virus, spyware, cloud extractor, bltools, pegasus, cve, dcrat, venom,
+aurora, stealer, free stealer, dropper, binder, blackhat, fud, asyncrat
 
 
 ## How does it work 

@@ -1,5 +1,5 @@
 from telethon import TelegramClient, events, sync
-from telethon.tl.types import DocumentAttributeFilename, Message, MessageMediaDocument
+from telethon.tl.types import Message
 import fileinput
 import asyncio
 import logging
@@ -20,8 +20,13 @@ api_hash = os.getenv("api_hash")
 api_id = os.getenv("api_id")
 phone_number = os.getenv("phone_number")
 download_path = os.getenv("download_path")
-rarexe = "C:\Program Files\WinRAR\Rar.exe"
 
+
+if os.path.exists("C:\Program Files\WinRAR\Rar.exe"):
+	rarexe="C:\Program Files\WinRAR\Rar.exe"
+else: 
+	print("[*] There are no RAR binary found on this machine")
+	rarexe=None
 
 # Start the client
 client = TelegramClient('anon', api_id, api_hash)
@@ -52,19 +57,31 @@ def compress_file_content_checker():
 
 
 def handle_zip(file_path):
-	with ZipFile("") as zip:
+	try:
+		with ZipFile(file_path) as zip:
 		# Download path is global varible, extract to download_path 
-		zip.extractall(download_path)
+			zip.extractall(download_path)
+		logging.info(f"ZIP extracted at: {download_path}")
+	except Exception as e:
+		logging.error(f"Error at handle_zip: {e}")
 
-def handle_rar(file):
-	print("")
+def handle_rar(file_path):
+	try:
+		logging.info(f"RAR extracted at: {download_path}")
+	except Exception as e:
+		logging.error(f"Error at handle_rar: {e}") 
 
-# This function is used after the compressed file has download, in order to pr
+# This function is used after the compressed file has download, 
 def compress_file_handler(file_name, file_path):
 	if ".rar" in file_name:
-		os.system(rarexe)
-		print("")
+		logging.info(f"RAR file recieved: {file_name}")
+		# If rar, on Windows then using windows rar if they have it -> extract the file using the password if needed
+		if rarexe is not None:
+			handle_rar(file_path)
+		else:
+			logging.error("Don't have RAR binary -> will no perfomr unrar")
 	elif "zip" in file_name:
+		logging.info(f"ZIP file recieved: {file_name}")
 		handle_zip(file_path)
 	else:
 		print("[*] Compressed file type not supported ")
@@ -89,7 +106,7 @@ async def output_monitored_dataleak(downloaded_files):
 		fileinput.close()
 		logging.info(f"output_monitored_dataleak error: {e}")
 
-def callback(current, total):
+def progress_bar(current, total):
     print('Downloaded', current, 'out of', total, 'bytes: {:.2%}'.format(current / total))
 
 @client.on(events.NewMessage())
@@ -105,7 +122,7 @@ async def downloadTXTFile(event: Message):
 
 			if ".txt" or ".csv" or ".rar" or ".zip "in event.message.media.document.attributes[0].file_name:
 				chat = await event.get_chat()
-				leak_download_path = await client.download_media(event.message.media,f"{download_path}{file_name}",progress_callback=callback)
+				leak_download_path = await client.download_media(event.message.media,f"{download_path}{file_name}",progress_callback=progress_bar)
 				# Check the newest data leak downloaded file has the important credential that we care about
 				
 				# if ".rar" or ".zip" in file_name:
