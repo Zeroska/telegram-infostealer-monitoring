@@ -1,6 +1,16 @@
 import os
 from urllib.parse import urlsplit
+import argparse
 
+parser = argparse.ArgumentParser(
+                    prog='Extract Redline Stealer',
+                    description='Just extract red line stealer from the folder that the telegram monitoring downloaded',
+                    epilog='Text at the bottom of help')
+
+parser.add_argument('-f', '--folder', help="Folder/ directory that contain redline stealer logs",required=True)      # option that takes a value
+parser.add_argument('-o', '--outputdir', help="Destinate folder/ directory that you want to output the result of the extraction",required=True)
+
+args = parser.parse_args()
 
 # I copy it from here: https://github.com/milxss/universal_stealer_log_parser/tree/main
 def detect_redline_stealer_folder():
@@ -58,8 +68,8 @@ def extract_passwords_redline(main_folder, output_folder, output_file2):
                             f.write(formatted_entry)
 
 
-output_folder=""
-output_file=""
-main_folder=""
+output_folder=args.outputdir
+output_file="extracted.txt"
+main_folder= args.folder
 
 extract_passwords_redline(main_folder,output_folder, output_file)
