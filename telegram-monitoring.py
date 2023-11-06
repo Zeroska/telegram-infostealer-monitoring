@@ -7,6 +7,8 @@ import os
 from zipfile import ZipFile
 from os.path import join, dirname
 from dotenv import load_dotenv
+import pymsteams
+
 
 
 # Logging 
@@ -20,6 +22,8 @@ api_hash = os.getenv("api_hash")
 api_id = os.getenv("api_id")
 phone_number = os.getenv("phone_number")
 download_path = os.getenv("download_path")
+webhook_url = os.getenv("webhook_url")
+myTeamsMessage = pymsteams.async_connectorcard(webhook_url)
 
 
 if os.path.exists("C:\Program Files\WinRAR\Rar.exe"):
@@ -31,12 +35,7 @@ else:
 # Start the client
 client = TelegramClient('anon', api_id, api_hash)
 
-channels = [""]
-team_webhook = ""
-
 # Filter keywords
-
-keywords_filter_list = []
 
 
 def lines_that_equal(line):
@@ -95,13 +94,16 @@ async def output_monitored_dataleak(downloaded_files):
 				if lines_that_equal(line):
 					print(f"[*] Data leaked found: {line}")
 					logging.info(f"Data leaked found: {line}")
+					myTeamsMessage.title("Data Leak Found in Stealer Logs")
+					myTeamsMessage.text(f"Data leaked found: {line}, please validate it, or create a ticket")
+					await myTeamsMessage.send()
 					# You can output it to another channel (teams chat, telegram chat or discord by using webhook)
 					with open("leaked.txt","w") as data:
 						data.write(str(line))
 						data.close()
-		fileinput.close()
 		logging.info("Checking successfully and found nothing")
 		print("[*] Checking successfully and found nothing")
+		fileinput.close()
 	except Exception as e:
 		fileinput.close()
 		logging.info(f"output_monitored_dataleak error: {e}")
@@ -121,17 +123,20 @@ async def downloadTXTFile(event: Message):
 			file_name = event.message.media.document.attributes[0].file_name
 
 			if ".txt" or ".csv" or ".rar" or ".zip "in event.message.media.document.attributes[0].file_name:
-				chat = await event.get_chat()
 				leak_download_path = await client.download_media(event.message.media,f"{download_path}{file_name}",progress_callback=progress_bar)
 				# Check the newest data leak downloaded file has the important credential that we care about
 				
 				# if ".rar" or ".zip" in file_name:
 				# 	compress_file_handler(file_name, leak_download_path)
-		
+
 				print(f"[*] File Name: {file_name}")
 				logging.info(f"File Name: {file_name}")
-				logging.info("File successfully downloaded at: " + str(leak_download_path))		
+				logging.info("File successfully downloaded at: " + str(leak_download_path))
+				myTeamsMessage.title("New Data Leak Downloaded")
+				myTeamsMessage.text("File successfully downloaded at: " + str(leak_download_path))
+				await myTeamsMessage.send()
 
+				# Check whether the new data set just download has the monitored keyword
 				await output_monitored_dataleak(leak_download_path)		
 			else:
 				logging.info("[*] New Media but not .txt, .csv, .rar, .zip")
