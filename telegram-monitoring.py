@@ -14,7 +14,7 @@ import pymsteams
 
 # Logging 
 logging.basicConfig(
-	format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO,filename="running.log",encoding='utf-8')
+	format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO,filename="telegram_monitoring.log",encoding='utf-8')
 
 # Env Configuration
 dotenv_path = join(dirname(__file__), '.env')

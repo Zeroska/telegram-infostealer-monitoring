@@ -2,6 +2,7 @@
 
 ## TODO
 - [ ] Compressed file handle -> RAR, ZIP: Ongoing
+- [x] Add Alerting Webhook to team
 - [ ] Compressed file with password : Ongoing
 - [ ] Extract Stealer Information
 - [ ] Adding more telegram dork and google dork
@@ -16,13 +17,14 @@ pip install -r requirement.txt
 
 ## How to use it / Configuration
 
-Create .env file and has these information, these information can generate using telegram api webpage
+**Create .env** file and has these information, these information can generate using telegram api webpage
 
 ``` conf
 api_hash="your_api_hash"
 api_id="your_app_id"
 phone_number = "your_phone_number"
 download_path="path"
+webhook_url='' # Add your URL Webhook right here, but use '' not ""
 ```
 **Download path is the path that you will store the leak data you crawl from the telegram channel**
 
