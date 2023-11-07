@@ -3,6 +3,7 @@ from telethon.tl.types import Message
 import fileinput
 import asyncio
 import logging
+import json 
 import os
 from zipfile import ZipFile
 from os.path import join, dirname
@@ -90,19 +91,26 @@ async def output_monitored_dataleak(downloaded_files):
 	try: 
 		logging.info("File downloaded and checking for data leak")
 		print("[*] File downloaded and checking for data leak")
+		list_of_leaked_creds = []
 		for line in fileinput.input([downloaded_files], encoding="utf8"):
 				if lines_that_equal(line):
 					print(f"[*] Data leaked found: {line}")
 					logging.info(f"Data leaked found: {line}")
-					myTeamsMessage.title("Data Leak Found in Stealer Logs")
-					myTeamsMessage.text(f"Data leaked found: {line}, please validate it, or create a ticket")
-					await myTeamsMessage.send()
+					line.strip("\n")
+					list_of_leaked_creds.append(line)
 					# You can output it to another channel (teams chat, telegram chat or discord by using webhook)
 					with open("leaked.txt","w") as data:
 						data.write(str(line))
 						data.close()
-		logging.info("Checking successfully and found nothing")
-		print("[*] Checking successfully and found nothing")
+		# Sadly I'm not a developer :"> 
+		if len(list_of_leaked_creds) > 0:
+			myTeamsMessage.color("#B70000")
+			myTeamsMessage.title("Data Leak Found in Stealer Logs")
+			myTeamsMessage.text(f"Data leaked found: {list_of_leaked_creds} Please validate it, or create a ticket")
+			await myTeamsMessage.send()
+		else:
+			logging.info("Checking successfully and found nothing")
+			print("[*] Checking successfully and found nothing")
 		fileinput.close()
 	except Exception as e:
 		fileinput.close()
@@ -111,11 +119,28 @@ async def output_monitored_dataleak(downloaded_files):
 def progress_bar(current, total):
     print('Downloaded', current, 'out of', total, 'bytes: {:.2%}'.format(current / total))
 
+
+def is_json(myjson):
+  split_mess = myjson.split()
+  final_mess = ''.join(split_mess)
+  try:
+   json.loads(final_mess)
+  except ValueError as e:
+    return False
+  return True
+
+
 @client.on(events.NewMessage())
 async def downloadTXTFile(event: Message):
 	try: 
-		# we use event.message.media.document because we only want the file not other media such as Photo or anything just file 
 		print(f"[*] New Message Recieved")
+		# We check JSON because this channel : https://t.me/breachdetector send alert on data leak in form of JSON, we could have listen on that channel only
+		# but Khuong decided not to do that instead just detect channel that send Message in JSON format 
+		# event.message.messsage -> is the message string 
+		if is_json(event.message.message):
+			print(f"JSON: {event.message.message}")
+			# Fire an alert or store on database -> 
+
 		if event.message.media is not None:
 			print(event.message.media.document)
 			print("File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
@@ -139,8 +164,7 @@ async def downloadTXTFile(event: Message):
 				# Check whether the new data set just download has the monitored keyword
 				await output_monitored_dataleak(leak_download_path)		
 			else:
-				logging.info("[*] New Media but not .txt, .csv, .rar, .zip")
-				
+				logging.info(f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
 	except Exception as e:
 		logging.error(f"Exception: {e}" )
 	
