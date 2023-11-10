@@ -5,6 +5,7 @@ import asyncio
 import logging
 import json 
 import os
+from FastTelethonhelper import fast_download
 from zipfile import ZipFile
 from os.path import join, dirname
 from dotenv import load_dotenv
@@ -147,8 +148,8 @@ async def downloadTXTFile(event: Message):
 			
 			file_name = event.message.media.document.attributes[0].file_name
 
-			if ".txt" or ".csv" or ".rar" or ".zip "in event.message.media.document.attributes[0].file_name:
-				leak_download_path = await client.download_media(event.message.media,f"{download_path}{file_name}",progress_callback=progress_bar)
+			if ".txt" or ".csv" or ".zip "in event.message.media.document.attributes[0].file_name:
+				leak_download_path = await fast_download(client, event.message.media, download_path, progress_bar)
 				# Check the newest data leak downloaded file has the important credential that we care about
 				
 				# if ".rar" or ".zip" in file_name:

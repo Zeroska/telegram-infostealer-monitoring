@@ -15,6 +15,10 @@ Require using python3, to install package that required please run the command b
 pip install -r requirement.txt
 ```
 
+Why we install cryptg: https://stackoverflow.com/questions/64047589/why-is-telethon-so-slow-to-send-files, I amaze by this knowlege -> when install this package,
+telethon decrypt data using C rather than Python -> which is much much faster
+
+
 ## How to use it / Configuration
 
 **Create .env** file and has these information, these information can generate using telegram api webpage
