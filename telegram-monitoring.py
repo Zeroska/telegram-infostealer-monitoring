@@ -7,6 +7,7 @@ import json
 import os
 from FastTelethonhelper import fast_download
 from zipfile import ZipFile
+from rarfile import RarFile
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pymsteams
@@ -28,11 +29,6 @@ webhook_url = os.getenv("webhook_url")
 myTeamsMessage = pymsteams.async_connectorcard(webhook_url)
 
 
-if os.path.exists("C:\Program Files\WinRAR\Rar.exe"):
-	rarexe="C:\Program Files\WinRAR\Rar.exe"
-else: 
-	print("[*] There are no RAR binary found on this machine")
-	rarexe=None
 
 # Start the client
 client = TelegramClient('anon', api_id, api_hash)
@@ -41,8 +37,8 @@ client = TelegramClient('anon', api_id, api_hash)
 
 
 def lines_that_equal(line):
-	# TODO: Allow user to specify the keyword by using .env or by using argument to the script not by modify the code 
-	word_list = ['opswat.com','@hdbank.com','zeroska.dev@gmail.com','@rootgroup','eolianenergy.com']
+	# TODO: Allow user to specify the keyword by using .env or by using argument to the script not by modify the code
+	word_list = ['@opswat.com','@hdbank.com','@rootgroup','@eolianenergy.com']
 	for key in word_list:
 		if key in line:
 			return True
@@ -68,6 +64,9 @@ def handle_zip(file_path):
 
 def handle_rar(file_path):
 	try:
+		with RarFile(file_path) as rar:
+			if rar.needs_password() == False:
+				rar.extractall(download_path)
 		logging.info(f"RAR extracted at: {download_path}")
 	except Exception as e:
 		logging.error(f"Error at handle_rar: {e}") 
@@ -75,14 +74,11 @@ def handle_rar(file_path):
 # This function is used after the compressed file has download, 
 def compress_file_handler(file_name, file_path):
 	if ".rar" in file_name:
-		logging.info(f"RAR file recieved: {file_name}")
+		logging.info(f"RAR file received: {file_name}")
 		# If rar, on Windows then using windows rar if they have it -> extract the file using the password if needed
-		if rarexe is not None:
-			handle_rar(file_path)
-		else:
-			logging.error("Don't have RAR binary -> will no perfomr unrar")
+		handle_rar(file_path)
 	elif "zip" in file_name:
-		logging.info(f"ZIP file recieved: {file_name}")
+		logging.info(f"ZIP file received: {file_name}")
 		handle_zip(file_path)
 	else:
 		print("[*] Compressed file type not supported ")
@@ -134,7 +130,7 @@ def is_json(myjson):
 @client.on(events.NewMessage())
 async def downloadTXTFile(event: Message):
 	try: 
-		print(f"[*] New Message Recieved")
+		print(f"[*] New Message Received")
 		# We check JSON because this channel : https://t.me/breachdetector send alert on data leak in form of JSON, we could have listen on that channel only
 		# but Khuong decided not to do that instead just detect channel that send Message in JSON format 
 		# event.message.messsage -> is the message string 
@@ -148,7 +144,7 @@ async def downloadTXTFile(event: Message):
 			
 			file_name = event.message.media.document.attributes[0].file_name
 
-			if ".txt" or ".csv" or ".zip "in event.message.media.document.attributes[0].file_name:
+			if ".txt" or ".csv" or ".zip" in event.message.media.document.attributes[0].file_name:
 				leak_download_path = await fast_download(client, event.message.media, download_path, progress_bar)
 				# Check the newest data leak downloaded file has the important credential that we care about
 				

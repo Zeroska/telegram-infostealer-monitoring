@@ -4,7 +4,7 @@
 - [ ] Compressed file handle -> RAR, ZIP: Ongoing
 - [x] Add Alerting Webhook to team
 - [ ] Compressed file with password : Ongoing
-- [ ] Extract Stealer Information
+- [x] Extract Stealer Information
 - [ ] Adding more telegram dork and google dork
 - [ ] Remove hardcoded search keyword 
 
@@ -17,11 +17,11 @@ pip install -r requirement.txt
 
 Why we install cryptg: https://stackoverflow.com/questions/64047589/why-is-telethon-so-slow-to-send-files, I amaze by this knowlege -> when install this package,
 telethon decrypt data using C rather than Python -> which is much much faster
-
+Or you can just use the FastTelethonHelper
 
 ## How to use it / Configuration
 
-**Create .env** file and has these information, these information can generate using telegram api webpage
+**Create .env** file and has these information, these information can generate using telegram api webpage (https://core.telegram.org/api/obtaining_api_id -> show how you can get the api_hash and app_id).  
 
 ``` conf
 api_hash="your_api_hash"
@@ -52,10 +52,13 @@ Here are the few telegram channel that has the above information: (the list will
 - https://t.me/cloudtxt 
 - https://t.me/URLPASSWORD -> 
 - https://t.me/urllogpas -> 
-- https://t.me/fr33d4t4
-- https://t.me/baseleak
+- https://t.me/fr33d4t4 -> Logs need to go to URL to download
+- https://t.me/baseleak ->
 - https://t.me/llinkcloud -> Logs with GB of data, but base 2020-2022 -> still good
 - https://t.me/breachdetector (Dark web monitoring and logs) -> good channels
+- https://t.me/DarkfeedNews (Dark net information) -> picture not txt
+- https://t.me/BoldCloud (Logs but old) -> need to ingest old data
+- 
 
 # How to find these channel or Telegram channel in general
 - https://telegra.ph/Tips-how-to-find-private-hidden-personal-groups-and-channels---TelegramPrivateChatLeaks-08-10

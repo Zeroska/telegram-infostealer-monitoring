@@ -2,4 +2,4 @@
 *session
 test.txt
 *.log
-
+.DS_Store
