@@ -58,6 +58,7 @@ Here are the few telegram channel that has the above information: (the list will
 - https://t.me/breachdetector (Dark web monitoring and logs) -> good channels
 - https://t.me/DarkfeedNews (Dark net information) -> picture not txt
 - https://t.me/BoldCloud (Logs but old) -> need to ingest old data
+- https://t.me/RedlineLogsGroup (Look like some cool shit)
 - 
 
 # How to find these channel or Telegram channel in general
