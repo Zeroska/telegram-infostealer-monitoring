@@ -1,4 +1,5 @@
 from telethon import TelegramClient, events, sync
+from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import Message
 import fileinput
 import asyncio
@@ -125,9 +126,29 @@ def is_json(myjson):
     return False
   return True
 
+def detect_telegram_link(urls_list : list):
+	# check for telegram channels link
+	telegram_url_extracted_list = []
+	url_need_to_be_review_list = []
+	for url  in urls_list:
+		if "t.me/" in url:
+			telegram_url_extracted_list.append(url)
+		else:
+			url_need_to_be_review_list.append(url)
+	return telegram_url_extracted_list, url_need_to_be_review_list
+
+def contain_url_in_message(event : Message):
+	print(event.message.message)
+	telegram_message = event.message.message.split()
+	print(telegram_message)
+	urls=[]
+	for i in telegram_message:
+		if i.startswith("https:") or i.startswith("http:"):
+			urls.append(i)
+	return urls
 
 @client.on(events.NewMessage())
-async def downloadTXTFile(event: Message):
+async def handle_new_dataleak_message(event: Message):
 	try: 
 		print(f"[*] New Message Received")
 		# We check JSON because this channel : https://t.me/breachdetector send alert on data leak in form of JSON, we could have listen on that channel only
@@ -135,7 +156,17 @@ async def downloadTXTFile(event: Message):
 		# event.message.messsage -> is the message string 
 		if is_json(event.message.message):
 			print(f"JSON: {event.message.message}")
-			# Fire an alert or store on database -> 
+		
+
+		urls_list = contain_url_in_message(event)
+		tele_url, review_url = detect_telegram_link(urls_list)
+		
+		if tele_url is not None:
+			# Join telegram channels 
+			print(tele_url)
+		if review_url is not None:
+			# Saved URL and notifiy operator to reviewed
+			print(review_url)
 
 		if event.document is not None:
 			print(event.message.media.document)

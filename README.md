@@ -8,6 +8,11 @@
 - [ ] Adding more telegram dork and google dork
 - [ ] Remove hardcoded search keyword 
 
+## Overview
+The control flow of telegram monitoring script which made by Nam Le - Momo 
+
+![Telegram Monitoring Control Flow](images/teleFlow.svg)
+
 ## Installation
 Require using python3, to install package that required please run the command below after clone the repo
 
