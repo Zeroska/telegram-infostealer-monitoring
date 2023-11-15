@@ -29,10 +29,6 @@ myTeamsMessage = pymsteams.async_connectorcard(webhook_url)
 # Start the client
 client = TelegramClient('anon', int(api_id), api_hash)
 
-
-# Filter keywords
-
-
 def lines_that_equal(line):
     # TODO: Allow user to specify the keyword by using .env or by using argument to the script not by modify the code
     word_list = ['@opswat.com', '@hdbank.com', '@rootgroup', '@eolianenergy.com']
@@ -144,7 +140,17 @@ def detect_telegram_link(urls_list: list):
 
 # TODO: Filter benign URL and duplicated
 def filter_url(urls_list: list[str]):
-    print("")
+    black_list_domain = ["ift.tt"]
+    # Remove duplicated line first
+    with open("need_to_review_url.txt", "r") as data:
+        if data.readlines() in urls_list:
+            print(f"Remove Duplicate")
+    # Remove black listed url from the list
+    for url in urls_list:
+        if url in black_list_domain:
+            urls_list.remove(url)
+            logging.info(f"Removed black listed URL: {url}")
+    return  urls_list
 
 
 def contain_url_in_message(event: Message):
@@ -174,9 +180,9 @@ async def store_review_url(review_url: list):
         if review_url is None:
             return
         # Check duplicate URL first
-
+        filtered_review_url = filter_url(review_url)
         with open("need_to_review_url.txt", "a") as data:
-            for url in review_url:
+            for url in filtered_review_url:
                 data.write(str(url) + "\n")
             data.close()
     except Exception as e:
