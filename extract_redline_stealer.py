@@ -3,18 +3,22 @@ from urllib.parse import urlsplit
 import argparse
 
 parser = argparse.ArgumentParser(
-                    prog='Extract Redline Stealer',
-                    description='Just extract red line stealer from the folder that the telegram monitoring downloaded',
-                    epilog='Text at the bottom of help')
+    prog='Extract Redline Stealer',
+    description='Just extract red line stealer from the folder that the telegram monitoring downloaded',
+    epilog='Text at the bottom of help')
 
-parser.add_argument('-f', '--folder', help="Folder/ directory that contain redline stealer logs",required=True)      # option that takes a value
-parser.add_argument('-o', '--outputdir', help="Destinate folder/ directory that you want to output the result of the extraction",required=True)
+parser.add_argument('-f', '--folder', help="Folder/ directory that contain redline stealer logs",
+                    required=True)  # option that takes a value
+parser.add_argument('-o', '--outputdir', help="Destinate folder/ directory that you want to output the result of the "
+                                              "extraction", required=True)
 
 args = parser.parse_args()
+
 
 # I copy it from here: https://github.com/milxss/universal_stealer_log_parser/tree/main
 def detect_redline_stealer_folder():
     print("[*] Checking for Redline Stealer Folder")
+
 
 def extract_passwords_redline(main_folder, output_folder, output_file2):
     # Loop through all subdirectories in the main folder
@@ -44,11 +48,14 @@ def extract_passwords_redline(main_folder, output_folder, output_file2):
                     user = ""
                     password = ""
                     for line in lines:
-                        if line.startswith("URL:") or line.startswith("url:") or line.startswith("Url:") or line.startswith("Host:") or line.startswith("HOSTNAME:"):
+                        if line.startswith("URL:") or line.startswith("url:") or line.startswith(
+                                "Url:") or line.startswith("Host:") or line.startswith("HOSTNAME:"):
                             url = line.split(":", 1)[1].strip() if len(line.split(":")) > 1 else ""
-                        elif line.startswith("USER:") or line.startswith("login:") or line.startswith("Login") or line.startswith("Username") or line.startswith("USER LOGIN:"):
+                        elif line.startswith("USER:") or line.startswith("login:") or line.startswith(
+                                "Login") or line.startswith("Username") or line.startswith("USER LOGIN:"):
                             user = line.split(":")[1].strip() if len(line.split(":")) > 1 else ""
-                        elif line.startswith("PASS:") or line.startswith("password:") or line.startswith("Password") or line.startswith("USER PASSWORD"):
+                        elif line.startswith("PASS:") or line.startswith("password:") or line.startswith(
+                                "Password") or line.startswith("USER PASSWORD"):
                             password = line.split(":")[1].strip() if len(line.split(":")) > 1 else ""
                     # Format the entry as "URL:USER:PASS"
                     if url:
@@ -68,8 +75,8 @@ def extract_passwords_redline(main_folder, output_folder, output_file2):
                             f.write(formatted_entry)
 
 
-output_folder=args.outputdir
-output_file="extracted.txt"
-main_folder= args.folder
+output_folder = args.outputdir
+output_file = "extracted.txt"
+main_folder = args.folder
 
-extract_passwords_redline(main_folder,output_folder, output_file)
+extract_passwords_redline(main_folder, output_folder, output_file)
