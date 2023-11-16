@@ -26,19 +26,28 @@ download_path = os.getenv("download_path")
 webhook_url = os.getenv("webhook_url")
 myTeamsMessage = pymsteams.async_connectorcard(webhook_url)
 
+if os.path.exists("monitored_wordlist.txt"):
+    with open("monitored_wordlist.txt", "r") as keyword_list:
+        MONITORED_WORDLIST = keyword_list.readlines()
+        MONITORED_WORDLIST = map(lambda s: s.strip(), MONITORED_WORDLIST)
+else:
+    print(f"Please create monitored_wordlist.txt first before running this script")
+    exit()
+
 # Start the client
 client = TelegramClient('anon', int(api_id), api_hash)
 
+
 def lines_that_equal(line):
     # TODO: Allow user to specify the keyword by using .env or by using argument to the script not by modify the code
-    word_list = ['@opswat.com', '@hdbank.com', '@rootgroup', '@eolianenergy.com']
-    for key in word_list:
+
+    for key in MONITORED_WORDLIST:
         if key in line:
             return True
     return False
 
 
-async def send_telegram_channel_notification():
+async def send_telegram_channel_notification(event):
     logging.info("Sending notification to telegram channels")
 
 
@@ -140,17 +149,22 @@ def detect_telegram_link(urls_list: list):
 
 # TODO: Filter benign URL and duplicated
 def filter_url(urls_list: list[str]):
-    black_list_domain = ["ift.tt"]
+    black_list_domain = ["https://ift.tt/"]
     # Remove duplicated line first
-    with open("need_to_review_url.txt", "r") as data:
-        if data.readlines() in urls_list:
-            print(f"Remove Duplicate")
-    # Remove black listed url from the list
-    for url in urls_list:
-        if url in black_list_domain:
-            urls_list.remove(url)
-            logging.info(f"Removed black listed URL: {url}")
-    return  urls_list
+    if os.path.exists("need_to_review_url.txt"):
+        with open("need_to_review_url.txt", "r") as data:
+            review_url_list = data.readlines()
+            review_url_list = map(lambda s: s.strip(), review_url_list)  # Remove newline (\n) from reading the file
+            for url in urls_list:
+                if url in review_url_list:
+                    urls_list.remove(url)
+                    logging.info(f"Removed duplicated URL: {url}")
+        # Remove black listed url from the list
+        for url in urls_list:
+            if url in black_list_domain:
+                urls_list.remove(url)
+                logging.info(f"Removed black listed URL: {url}")
+    return urls_list
 
 
 def contain_url_in_message(event: Message):
@@ -179,7 +193,7 @@ async def store_review_url(review_url: list):
     try:
         if review_url is None:
             return
-        # Check duplicate URL first
+        # Check duplicate URL and black list URL first
         filtered_review_url = filter_url(review_url)
         with open("need_to_review_url.txt", "a") as data:
             for url in filtered_review_url:
