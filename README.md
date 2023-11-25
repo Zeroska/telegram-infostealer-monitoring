@@ -1,12 +1,15 @@
 # Telegram info stealer monitoring (private project)
 
-## TODO
+## TODO and Ideas for future improvement
 - [ ] Compressed file handle -> RAR, ZIP: Ongoing
 - [x] Add Alerting Webhook to team
 - [ ] Compressed file with password : Ongoing
 - [x] Extract Stealer Information
 - [ ] Adding more telegram dork and google dork
 - [x] Remove hardcoded search keyword 
+
+Not only we can monitoring info stealer sample data if we can leverage and monitoring the chat, to find the keyword such as tool name
+or selling prices, text behavior or any user
 
 ## Overview
 The control flow of telegram monitoring script which made by Nam Le - Momo 

@@ -9,6 +9,7 @@ from zipfile import ZipFile
 from rarfile import RarFile
 from os.path import join, dirname
 from dotenv import load_dotenv
+import platform
 import pymsteams
 
 # Logging
@@ -237,7 +238,7 @@ async def handle_new_dataleak_message(event: Message):
                 logging.info(f"File Name: {file_name}")
                 logging.info("File successfully downloaded at: " + str(leak_download_path))
                 myTeamsMessage.title("New Data Leak Downloaded")
-                myTeamsMessage.text("File successfully downloaded at: " + str(leak_download_path))
+                myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(leak_download_path))
                 await myTeamsMessage.send()
 
                 # Check whether the new data set just download has the monitored keyword

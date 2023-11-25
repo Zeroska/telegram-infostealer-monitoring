@@ -3,3 +3,4 @@
 test.txt
 *.log
 .DS_Store
+monitored_wordlist.txt
