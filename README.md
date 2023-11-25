@@ -12,7 +12,7 @@ Not only we can monitoring info stealer sample data if we can leverage and monit
 or selling prices, text behavior or any user
 
 ## Overview
-The control flow of telegram monitoring script which made by Nam Le - Momo 
+The control flow of telegram monitoring script
 
 ![Telegram Monitoring Control Flow](images/teleFlow.svg)
 
