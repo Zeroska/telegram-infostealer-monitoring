@@ -9,7 +9,7 @@
 - [x] Remove hardcoded search keyword 
 
 ## Overview
-The control flow of telegram monitoring script which made by Nam Le - Momo 
+The control flow of telegram monitoring script
 
 ![Telegram Monitoring Control Flow](images/teleFlow.svg)
 

@@ -3,8 +3,12 @@ from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import Message
 import fileinput
 import logging
+import time
 import json
 import os
+import schedule
+import threading
+import asyncio
 from zipfile import ZipFile
 from rarfile import RarFile
 from os.path import join, dirname
@@ -39,21 +43,10 @@ client = TelegramClient('anon', int(api_id), api_hash)
 
 
 def lines_that_equal(line):
-    # TODO: Allow user to specify the keyword by using .env or by using argument to the script not by modify the code
-
     for key in MONITORED_WORDLIST:
         if key in line:
             return True
     return False
-
-
-async def send_telegram_channel_notification(event):
-    logging.info("Sending notification to telegram channels")
-
-
-# This function is used to check the content of compressed file, whether if it is
-def compress_file_content_checker():
-    print("[*] Read content file to pass to the compress file handler ")
 
 
 def handle_zip(file_path):
@@ -69,7 +62,7 @@ def handle_zip(file_path):
 def handle_rar(file_path):
     try:
         with RarFile(file_path) as rar:
-            if rar.needs_password() == False:
+            if not rar.needs_password():
                 rar.extractall(download_path)
         logging.info(f"RAR extracted at: {download_path}")
     except Exception as e:
@@ -91,7 +84,7 @@ def compress_file_handler(file_name, file_path):
 
 
 # You can disable this function as you pleases, if you send your log to another place
-async def output_monitored_dataleak(downloaded_files):
+async def output_monitored_data_leak(downloaded_files):
     try:
         logging.info("File downloaded and checking for data leak")
         print("[*] File downloaded and checking for data leak")
@@ -118,23 +111,15 @@ async def output_monitored_dataleak(downloaded_files):
         fileinput.close()
     except Exception as e:
         fileinput.close()
-        logging.info(f"output_monitored_dataleak error: {e}")
+        logging.info(f"output_monitored_data_leak error: {e}")
 
 
 def progress_bar(current, total):
     print('Downloaded', current, 'out of', total, 'bytes: {:.2%}'.format(current / total))
 
 
-def is_json(message_str):
-    split_mess = message_str.split()
-    final_mess = ''.join(split_mess)
-    try:
-        json.loads(final_mess)
-    except ValueError as e:
-        return False
-    return True
-
-
+# This function detect message has telegram link and join that channel, if the link is not telegram, store it for
+# further review or statistic
 def detect_telegram_link(urls_list: list):
     # check for telegram channels link
     telegram_url_extracted_list = []
@@ -145,6 +130,31 @@ def detect_telegram_link(urls_list: list):
         else:
             url_need_to_be_review_list.append(url)
     return telegram_url_extracted_list, url_need_to_be_review_list
+
+
+def run_scheduler():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+async def daily_run_report():
+    print("[*] Start daily report")
+    lines_seen = set()
+    input_file = "./need_to_review_url.txt"
+    output_file = "daily_report.txt"
+    with open(output_file, 'w') as out_file:
+        with open(input_file, 'r') as in_file:
+            for line in in_file:
+                if line not in lines_seen:
+                    out_file.write(line)
+                    lines_seen.add(line)
+
+    myTeamsMessage.color("")
+    myTeamsMessage.title("Telegram monitoring daily statistic")
+    myTeamsMessage.text("")
+
+    return
 
 
 # TODO: Filter benign URL and duplicated
@@ -159,7 +169,7 @@ def filter_url(urls_list: list[str]):
                 if url in review_url_list:
                     urls_list.remove(url)
                     logging.info(f"Removed duplicated URL: {url}")
-        # Remove black listed url from the list
+        # Remove black listed url from the list, which 
         for url in urls_list:
             if url in black_list_domain:
                 urls_list.remove(url)
@@ -204,15 +214,9 @@ async def store_review_url(review_url: list):
 
 
 @client.on(events.NewMessage())
-async def handle_new_dataleak_message(event: Message):
+async def handle_new_data_leak_message(event: Message):
     try:
         print(f"[*] New Message Received")
-        # We check JSON because this channel : https://t.me/breachdetector send alert on data leak in form of JSON,
-        # we could have listen on that channel only but Khuong decided not to do that instead just detect channel that
-        # send Message in JSON format event.message.messsage -> is the message string
-        if is_json(event.message.message):
-            print(f"JSON: {event.message.message}")
-
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
 
@@ -225,11 +229,10 @@ async def handle_new_dataleak_message(event: Message):
 
             file_name = event.message.media.document.attributes[0].file_name
 
-            if ".txt" or ".csv" or ".zip" in event.message.media.document.attributes[0].file_name:
+            if ".txt" or ".csv" in event.message.media.document.attributes[0].file_name:
                 leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}",
                                                                  progress_callback=progress_bar)
                 # Check the newest data leak downloaded file has the important credential that we care about
-
                 # if ".rar" or ".zip" in file_name:
                 # 	compress_file_handler(file_name, leak_download_path)
 
@@ -241,7 +244,7 @@ async def handle_new_dataleak_message(event: Message):
                 await myTeamsMessage.send()
 
                 # Check whether the new data set just download has the monitored keyword
-                await output_monitored_dataleak(leak_download_path)
+                await output_monitored_data_leak(leak_download_path)
             else:
                 logging.info(f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
     except Exception as e:
@@ -252,6 +255,11 @@ async def handle_new_dataleak_message(event: Message):
 async def main():
     print("[*] Telegram monitoring starting")
     await client.run_until_disconnected()
+    schedule.every().day.at("00:00").do(daily_run_report)
+    scheduler_thread = threading.Thread(target=run_scheduler)
+    scheduler_thread.start()
+    while True:
+        await asyncio.sleep(1)
 
 
 # TODO: Learn how to Async IO work
