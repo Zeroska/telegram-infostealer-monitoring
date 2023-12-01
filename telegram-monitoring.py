@@ -6,6 +6,7 @@ import logging
 import time
 import json
 import os
+import re
 import schedule
 import threading
 import asyncio
@@ -132,6 +133,47 @@ def detect_telegram_link(urls_list: list):
             url_need_to_be_review_list.append(url)
     return telegram_url_extracted_list, url_need_to_be_review_list
 
+
+def format_line(data):
+    # format_line() is use for filter and parse the stealer logs to nicely formatted event which is 
+    # { "username": "", "password": "", "url": ""} and push this information to any SIEM
+    def check_back_url(content):
+        url_pattern = r'\w+\.(?:com|net|org|edu|gov|int|mil|biz|info|name|pro|aero|coop|museum|[a-z]{2})\b'
+        if re.match(url_pattern,content):
+            return True
+        return False
+    
+    event = {
+        "username": "",
+        "password": "",
+        "url": "",
+    }
+
+    line = str(data)
+    if line.startswith("http") or line.startswith("www"):
+        match = re.search(r'(?P<url>https?://[^\s]+)?[: ](?P<username>[^:]+)?:(?P<password>[^:]+)?', line)
+        if match:
+            event["url"] = match.group('url')
+            event["username"] = match.group('username')
+            event["password"] = match.group('password')
+            return event
+        else:
+            return line
+    else:
+        match = re.search(r'(?P<username>[^:]+)?:(?P<password>[^:]+)?:(?P<url>[^\s]+)?', line)
+        if match:
+            if check_back_url(match.group('username')):
+                event["url"] = match.group('username')
+                event["username"] = match.group('password')
+                event["password"] = match.group('url')
+                return event
+            else:
+                event["url"] = match.group('url')
+                event["username"] = match.group('username')
+                event["password"] = match.group('password')
+                return event
+        else:
+            return line
 
 def run_scheduler():
     while True:

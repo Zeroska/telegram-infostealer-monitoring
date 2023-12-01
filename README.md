@@ -3,6 +3,7 @@
 ## TODO and Ideas for future improvement
 - [ ] Compressed file handle -> RAR, ZIP: Ongoing
 - [x] Add Alerting Webhook to team
+- [ ] Handle duplicated data
 - [ ] Compressed file with password : Ongoing
 - [x] Extract Stealer Information
 - [ ] Adding more telegram dork and google dork
@@ -108,4 +109,3 @@ Search for keyword which is your email handle, domain or anything that important
 ## Extract Stealer Information 
 
 Refs: https://github.com/milxss/universal_stealer_log_parser/tree/main -> use this git repo to do all kind of stealer information extraction
-
