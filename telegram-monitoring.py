@@ -110,7 +110,6 @@ async def output_monitored_data_leak(downloaded_files):
             myTeamsMessage.color("#080000")
             myTeamsMessage.title("New Data Leak Downloaded")
             myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(downloaded_files)  +  "    \nChecking successfully and found nothing")
-            myTeamsMessage.text()
             await myTeamsMessage.send()
             logging.info("Checking successfully and found nothing")
             print("[*] Checking successfully and found nothing")
@@ -257,10 +256,10 @@ async def handle_new_data_leak_message(event: Message):
 # Start the infinite loop to wait for new messages	
 async def main():
     print("[*] Telegram monitoring starting")
-    await client.run_until_disconnected()
-    schedule.every().day.at("00:00").do(daily_run_report)
-    scheduler_thread = threading.Thread(target=run_scheduler)
-    scheduler_thread.start()
+    # await client.run_until_disconnected()
+    # schedule.every().day.at("00:00").do(daily_run_report)
+    # scheduler_thread = threading.Thread(target=run_scheduler)
+    # scheduler_thread.start()
     while True:
         await asyncio.sleep(1)
 
