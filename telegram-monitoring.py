@@ -6,7 +6,6 @@ import logging
 import time
 import json
 import os
-import re
 import schedule
 import threading
 import asyncio
@@ -14,7 +13,6 @@ from zipfile import ZipFile
 from rarfile import RarFile
 from os.path import join, dirname
 from dotenv import load_dotenv
-import platform
 import pymsteams
 
 # Logging
@@ -108,6 +106,11 @@ async def output_monitored_data_leak(downloaded_files):
             myTeamsMessage.text(f"Data leaked found: {list_of_leaked_creds} Please validate it, or create a ticket")
             await myTeamsMessage.send()
         else:
+            myTeamsMessage.color("#008000")
+            myTeamsMessage.title("New Data Leak Downloaded")
+            myTeamsMessage.text("File successfully downloaded at: " + str(downloaded_files))
+            myTeamsMessage.text("Checking successfully and found nothing")
+            await myTeamsMessage.send()
             logging.info("Checking successfully and found nothing")
             print("[*] Checking successfully and found nothing")
         fileinput.close()
@@ -133,47 +136,6 @@ def detect_telegram_link(urls_list: list):
             url_need_to_be_review_list.append(url)
     return telegram_url_extracted_list, url_need_to_be_review_list
 
-
-def format_line(data):
-    # format_line() is use for filter and parse the stealer logs to nicely formatted event which is 
-    # { "username": "", "password": "", "url": ""} and push this information to any SIEM
-    def check_back_url(content):
-        url_pattern = r'\w+\.(?:com|net|org|edu|gov|int|mil|biz|info|name|pro|aero|coop|museum|[a-z]{2})\b'
-        if re.match(url_pattern,content):
-            return True
-        return False
-    
-    event = {
-        "username": "",
-        "password": "",
-        "url": "",
-    }
-
-    line = str(data)
-    if line.startswith("http") or line.startswith("www"):
-        match = re.search(r'(?P<url>https?://[^\s]+)?[: ](?P<username>[^:]+)?:(?P<password>[^:]+)?', line)
-        if match:
-            event["url"] = match.group('url')
-            event["username"] = match.group('username')
-            event["password"] = match.group('password')
-            return event
-        else:
-            return line
-    else:
-        match = re.search(r'(?P<username>[^:]+)?:(?P<password>[^:]+)?:(?P<url>[^\s]+)?', line)
-        if match:
-            if check_back_url(match.group('username')):
-                event["url"] = match.group('username')
-                event["username"] = match.group('password')
-                event["password"] = match.group('url')
-                return event
-            else:
-                event["url"] = match.group('url')
-                event["username"] = match.group('username')
-                event["password"] = match.group('password')
-                return event
-        else:
-            return line
 
 def run_scheduler():
     while True:
@@ -262,18 +224,17 @@ async def handle_new_data_leak_message(event: Message):
         print(f"[*] New Message Received")
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
-
+        
         await join_telegram_channel(telegram_url)
         await store_review_url(review_url)
-
         if event.document is not None:
             print(event.message.media.document)
             print("File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
-
-            file_name = event.message.media.document.attributes[0].file_name
-
-            if ".txt" or ".csv" in event.message.media.document.attributes[0].file_name:
-                leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}",
+            file_name = str(event.message.media.document.attributes[0].file_name).lower()
+            
+            # lower all char to normallize the data
+            if file_name.endswith((".txt",".csv")):
+                leak_download_path = await client.download_media(event.message.media, f"{file_name}",
                                                                  progress_callback=progress_bar)
                 # Check the newest data leak downloaded file has the important credential that we care about
                 # if ".rar" or ".zip" in file_name:
@@ -282,12 +243,10 @@ async def handle_new_data_leak_message(event: Message):
                 print(f"[*] File Name: {file_name}")
                 logging.info(f"File Name: {file_name}")
                 logging.info("File successfully downloaded at: " + str(leak_download_path))
-                myTeamsMessage.title("New Data Leak Downloaded")
-                myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(leak_download_path))
-                await myTeamsMessage.send()
 
-                # Check whether the new data set just download has the monitored keyword
                 await output_monitored_data_leak(leak_download_path)
+                # Check whether the new data set just download has the monitored keyword
+               
             else:
                 logging.info(f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
     except Exception as e:
