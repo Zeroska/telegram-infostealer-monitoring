@@ -106,7 +106,7 @@ async def output_monitored_data_leak(downloaded_files):
             myTeamsMessage.text(f"Data leaked found: {list_of_leaked_creds} Please validate it, or create a ticket")
             await myTeamsMessage.send()
         else:
-            myTeamsMessage.color("#008000")
+            myTeamsMessage.color("#080000")
             myTeamsMessage.title("New Data Leak Downloaded")
             myTeamsMessage.text("File successfully downloaded at: " + str(downloaded_files))
             myTeamsMessage.text("Checking successfully and found nothing")
