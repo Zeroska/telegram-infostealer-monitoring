@@ -6,6 +6,7 @@ import logging
 import time
 import json
 import os
+import platform
 import schedule
 import threading
 import asyncio
@@ -109,6 +110,7 @@ async def output_monitored_data_leak(downloaded_files):
             myTeamsMessage.color("#080000")
             myTeamsMessage.title("New Data Leak Downloaded")
             myTeamsMessage.text("File successfully downloaded at: " + str(downloaded_files))
+            myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(downloaded_files))
             myTeamsMessage.text("Checking successfully and found nothing")
             await myTeamsMessage.send()
             logging.info("Checking successfully and found nothing")
