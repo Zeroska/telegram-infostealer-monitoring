@@ -109,9 +109,8 @@ async def output_monitored_data_leak(downloaded_files):
         else:
             myTeamsMessage.color("#080000")
             myTeamsMessage.title("New Data Leak Downloaded")
-            myTeamsMessage.text("File successfully downloaded at: " + str(downloaded_files))
-            myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(downloaded_files))
-            myTeamsMessage.text("Checking successfully and found nothing")
+            myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(downloaded_files)  +  "    \nChecking successfully and found nothing")
+            myTeamsMessage.text()
             await myTeamsMessage.send()
             logging.info("Checking successfully and found nothing")
             print("[*] Checking successfully and found nothing")
