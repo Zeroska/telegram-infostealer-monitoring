@@ -72,12 +72,12 @@ def handle_rar(file_path):
     # This function is used after the compressed file has download,
 
 
-def compress_file_handler(file_name, file_path):
-    if ".rar" in file_name:
+def compress_file_handler(file_name: str, file_path: str):
+    if file_name.lower().endswith(".rar"):
         logging.info(f"RAR file received: {file_name}")
         # If rar, on Windows then using windows rar if they have it -> extract the file using the password if needed
         handle_rar(file_path)
-    elif "zip" in file_name:
+    elif file_name.lower().endswith(".zip"):
         logging.info(f"ZIP file received: {file_name}")
         handle_zip(file_path)
     else:
@@ -221,7 +221,6 @@ async def store_review_url(review_url: list):
 @client.on(events.NewMessage())
 async def handle_new_data_leak_message(event: Message):
     try:
-        print(f"[*] New Message Received")
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
         
@@ -235,8 +234,7 @@ async def handle_new_data_leak_message(event: Message):
             # lower all char to normallize the data
             if file_name.endswith((".txt",".csv")):
                 # download path is in the .env file and the path should end with a splash "/" or "\\" base on the OS
-                leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}",
-                                                                 progress_callback=progress_bar)
+                leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}")
                 
                 # Check the newest data leak downloaded file has the important credential that we care about
                 # if ".rar" or ".zip" in file_name:
