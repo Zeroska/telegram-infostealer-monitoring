@@ -142,13 +142,11 @@ def format_line(data):
         if re.match(url_pattern,content):
             return True
         return False
-    
     event = {
         "username": "",
         "password": "",
         "url": "",
     }
-
     line = str(data)
     if line.startswith("http") or line.startswith("www"):
         match = re.search(r'(?P<url>https?://[^\s]+)?[: ](?P<username>[^:]+)?:(?P<password>[^:]+)?', line)
