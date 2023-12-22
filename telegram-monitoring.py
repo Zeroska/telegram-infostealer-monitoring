@@ -234,7 +234,7 @@ async def handle_new_data_leak_message(event: Message):
             
             # lower all char to normallize the data
             if file_name.endswith((".txt",".csv")):
-                leak_download_path = await client.download_media(event.message.media, f"{file_name}",
+                leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}",
                                                                  progress_callback=progress_bar)
                 # Check the newest data leak downloaded file has the important credential that we care about
                 # if ".rar" or ".zip" in file_name:
