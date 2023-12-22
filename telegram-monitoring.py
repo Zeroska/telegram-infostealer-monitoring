@@ -6,7 +6,7 @@ import logging
 import time
 import json
 import os
-import re
+import platform
 import schedule
 import threading
 import asyncio
@@ -14,7 +14,6 @@ from zipfile import ZipFile
 from rarfile import RarFile
 from os.path import join, dirname
 from dotenv import load_dotenv
-import platform
 import pymsteams
 
 # Logging
@@ -73,12 +72,12 @@ def handle_rar(file_path):
     # This function is used after the compressed file has download,
 
 
-def compress_file_handler(file_name, file_path):
-    if ".rar" in file_name:
+def compress_file_handler(file_name: str, file_path: str):
+    if file_name.lower().endswith(".rar"):
         logging.info(f"RAR file received: {file_name}")
         # If rar, on Windows then using windows rar if they have it -> extract the file using the password if needed
         handle_rar(file_path)
-    elif "zip" in file_name:
+    elif file_name.lower().endswith(".zip"):
         logging.info(f"ZIP file received: {file_name}")
         handle_zip(file_path)
     else:
@@ -87,6 +86,9 @@ def compress_file_handler(file_name, file_path):
 
 # You can disable this function as you pleases, if you send your log to another place
 async def output_monitored_data_leak(downloaded_files):
+    # If the downloaded file extentions is .rar or .zip we pass we don't check the content of it 
+    if downloaded_files.endswith((".rar",".zip")):
+        return
     try:
         logging.info("File downloaded and checking for data leak")
         print("[*] File downloaded and checking for data leak")
@@ -108,6 +110,10 @@ async def output_monitored_data_leak(downloaded_files):
             myTeamsMessage.text(f"Data leaked found: {list_of_leaked_creds} Please validate it, or create a ticket")
             await myTeamsMessage.send()
         else:
+            myTeamsMessage.color("#0000FF")
+            myTeamsMessage.title("New Data Leak Downloaded")
+            myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(downloaded_files)  +  "    \nChecking successfully and found nothing")
+            await myTeamsMessage.send()
             logging.info("Checking successfully and found nothing")
             print("[*] Checking successfully and found nothing")
         fileinput.close()
@@ -257,35 +263,32 @@ async def store_review_url(review_url: list):
 @client.on(events.NewMessage())
 async def handle_new_data_leak_message(event: Message):
     try:
-        print(f"[*] New Message Received")
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
-
-        await join_telegram_channel(telegram_url)
+        
+        # await join_telegram_channel(telegram_url)
         await store_review_url(review_url)
-
         if event.document is not None:
             print(event.message.media.document)
             print("File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
-
-            file_name = event.message.media.document.attributes[0].file_name
-
-            if ".txt" or ".csv" in event.message.media.document.attributes[0].file_name:
-                leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}",
-                                                                 progress_callback=progress_bar)
-                # Check the newest data leak downloaded file has the important credential that we care about
-                # if ".rar" or ".zip" in file_name:
-                # 	compress_file_handler(file_name, leak_download_path)
-
+            file_name = str(event.message.media.document.attributes[0].file_name).lower()
+            
+            # lower all char to normallize the data, this is the Linux file path
+            if file_name.endswith((".txt",".csv",".rar","zip")):
+                if file_name.endswith(".rar"):
+                    file_name = "leaked_rar/"+file_name
+                if file_name.endswith(".zip"):
+                    file_name = "leaked_zip/"+file_name
+                # download path is in the .env file and the path should end with a splash "/" or "\\" base on the OS
+                leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}")
+                
                 print(f"[*] File Name: {file_name}")
                 logging.info(f"File Name: {file_name}")
                 logging.info("File successfully downloaded at: " + str(leak_download_path))
-                myTeamsMessage.title("New Data Leak Downloaded")
-                myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(leak_download_path))
-                await myTeamsMessage.send()
 
                 # Check whether the new data set just download has the monitored keyword
                 await output_monitored_data_leak(leak_download_path)
+                    
             else:
                 logging.info(f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
     except Exception as e:
@@ -296,12 +299,9 @@ async def handle_new_data_leak_message(event: Message):
 async def main():
     print("[*] Telegram monitoring starting")
     await client.run_until_disconnected()
-    schedule.every().day.at("00:00").do(daily_run_report)
-    scheduler_thread = threading.Thread(target=run_scheduler)
-    scheduler_thread.start()
-    while True:
-        await asyncio.sleep(1)
-
+    # schedule.every().day.at("00:00").do(daily_run_report)
+    # scheduler_thread = threading.Thread(target=run_scheduler)
+    # scheduler_thread.start()
 
 # TODO: Learn how to Async IO work
 with client:
