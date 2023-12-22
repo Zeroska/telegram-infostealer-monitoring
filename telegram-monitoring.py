@@ -107,7 +107,7 @@ async def output_monitored_data_leak(downloaded_files):
             myTeamsMessage.text(f"Data leaked found: {list_of_leaked_creds} Please validate it, or create a ticket")
             await myTeamsMessage.send()
         else:
-            myTeamsMessage.color("#080000")
+            myTeamsMessage.color("#0000FF")
             myTeamsMessage.title("New Data Leak Downloaded")
             myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(downloaded_files)  +  "    \nChecking successfully and found nothing")
             await myTeamsMessage.send()
@@ -234,8 +234,10 @@ async def handle_new_data_leak_message(event: Message):
             
             # lower all char to normallize the data
             if file_name.endswith((".txt",".csv")):
+                # download path is in the .env file and the path should end with a splash "/" or "\\" base on the OS
                 leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}",
                                                                  progress_callback=progress_bar)
+                
                 # Check the newest data leak downloaded file has the important credential that we care about
                 # if ".rar" or ".zip" in file_name:
                 # 	compress_file_handler(file_name, leak_download_path)
@@ -256,13 +258,10 @@ async def handle_new_data_leak_message(event: Message):
 # Start the infinite loop to wait for new messages	
 async def main():
     print("[*] Telegram monitoring starting")
-    # await client.run_until_disconnected()
+    await client.run_until_disconnected()
     # schedule.every().day.at("00:00").do(daily_run_report)
     # scheduler_thread = threading.Thread(target=run_scheduler)
     # scheduler_thread.start()
-    while True:
-        await asyncio.sleep(1)
-
 
 # TODO: Learn how to Async IO work
 with client:
