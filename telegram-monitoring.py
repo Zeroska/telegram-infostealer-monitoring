@@ -227,7 +227,7 @@ async def handle_new_data_leak_message(event: Message):
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
         
-        await join_telegram_channel(telegram_url)
+        # await join_telegram_channel(telegram_url)
         await store_review_url(review_url)
         if event.document is not None:
             print(event.message.media.document)
