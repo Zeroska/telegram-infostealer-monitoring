@@ -93,7 +93,7 @@ async def output_monitored_data_leak(downloaded_files):
         logging.info("File downloaded and checking for data leak")
         print("[*] File downloaded and checking for data leak")
         list_of_leaked_creds = []
-        for line in fileinput.input([downloaded_files], encoding="utf8"):
+        for line in fileinput.input([downloaded_files], encoding="utf-8"):
             if lines_that_equal(line):
                 print(f"[*] Data leaked found: {line}")
                 logging.info(f"Data leaked found: {line}")
