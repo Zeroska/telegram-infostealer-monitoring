@@ -232,21 +232,21 @@ async def handle_new_data_leak_message(event: Message):
             file_name = str(event.message.media.document.attributes[0].file_name).lower()
             
             # lower all char to normallize the data
-            if file_name.endswith((".txt",".csv")):
+            if file_name.endswith((".txt",".csv",".rar","zip")):
+                if file_name.endswith(".rar"):
+                    file_name = "leaked_rar/"+file_name
+                if file_name.endswith(".zip"):
+                    file_name = "leaked_zip/"+file_name
                 # download path is in the .env file and the path should end with a splash "/" or "\\" base on the OS
                 leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}")
                 
-                # Check the newest data leak downloaded file has the important credential that we care about
-                # if ".rar" or ".zip" in file_name:
-                # 	compress_file_handler(file_name, leak_download_path)
-
                 print(f"[*] File Name: {file_name}")
                 logging.info(f"File Name: {file_name}")
                 logging.info("File successfully downloaded at: " + str(leak_download_path))
-
-                await output_monitored_data_leak(leak_download_path)
+                
                 # Check whether the new data set just download has the monitored keyword
-               
+                await output_monitored_data_leak(leak_download_path)
+                    
             else:
                 logging.info(f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
     except Exception as e:
