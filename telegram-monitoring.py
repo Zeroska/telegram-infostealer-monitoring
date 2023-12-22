@@ -86,6 +86,9 @@ def compress_file_handler(file_name: str, file_path: str):
 
 # You can disable this function as you pleases, if you send your log to another place
 async def output_monitored_data_leak(downloaded_files):
+    # If the downloaded file extentions is .rar or .zip we pass we don't check the content of it 
+    if downloaded_files.endswith((".rar",".zip")):
+        return
     try:
         logging.info("File downloaded and checking for data leak")
         print("[*] File downloaded and checking for data leak")
@@ -231,7 +234,7 @@ async def handle_new_data_leak_message(event: Message):
             print("File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
             file_name = str(event.message.media.document.attributes[0].file_name).lower()
             
-            # lower all char to normallize the data
+            # lower all char to normallize the data, this is the Linux file path
             if file_name.endswith((".txt",".csv",".rar","zip")):
                 if file_name.endswith(".rar"):
                     file_name = "leaked_rar/"+file_name
@@ -243,7 +246,7 @@ async def handle_new_data_leak_message(event: Message):
                 print(f"[*] File Name: {file_name}")
                 logging.info(f"File Name: {file_name}")
                 logging.info("File successfully downloaded at: " + str(leak_download_path))
-                
+
                 # Check whether the new data set just download has the monitored keyword
                 await output_monitored_data_leak(leak_download_path)
                     
