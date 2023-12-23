@@ -3,13 +3,9 @@ from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import Message
 import fileinput
 import logging
-import time
-import json
+import re
 import os
 import platform
-import schedule
-import threading
-import asyncio
 from zipfile import ZipFile
 from rarfile import RarFile
 from os.path import join, dirname
@@ -43,7 +39,7 @@ else:
 client = TelegramClient('anon', int(api_id), api_hash)
 
 
-def lines_that_equal(line):
+def search_keyword(line):
     for key in MONITORED_WORDLIST:
         if key in line:
             return True
@@ -84,46 +80,56 @@ def compress_file_handler(file_name: str, file_path: str):
         print("[*] Compressed file type not supported ")
 
 
+async def send_ms_team_dataleak_found(list_of_leaked_creds):
+    myTeamsMessage.color("#B70000")
+    myTeamsMessage.title("Data Leak Found in Stealer Logs")
+    myTeamsMessage.text(
+        f"Data leaked found: {list_of_leaked_creds} Please validate it, or create a ticket")
+    await myTeamsMessage.send()
+
+
+async def send_ms_team_dataleak_downloaded(downloaded_files):
+    myTeamsMessage.color("#0000FF")
+    myTeamsMessage.title("New Data Leak Downloaded")
+    myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(
+        downloaded_files) + "    \nChecking successfully and found nothing")
+    await myTeamsMessage.send()
+
 # You can disable this function as you pleases, if you send your log to another place
+
+
 async def output_monitored_data_leak(downloaded_files):
-    # If the downloaded file extentions is .rar or .zip we pass we don't check the content of it 
-    if downloaded_files.endswith((".rar",".zip")):
+    # If the downloaded file extentions is .rar or .zip we pass we don't check the content of it
+    if downloaded_files.endswith((".rar", ".zip")):
         return
     try:
         logging.info("File downloaded and checking for data leak")
-        print("[*] File downloaded and checking for data leak")
         list_of_leaked_creds = []
-        for line in fileinput.input([downloaded_files], encoding="utf-8"):
-            if lines_that_equal(line):
-                print(f"[*] Data leaked found: {line}")
-                logging.info(f"Data leaked found: {line}")
-                line.strip("\n")
-                list_of_leaked_creds.append(line)
-                # You can output it to another channel (teams chat, telegram chat or discord by using webhook)
-                with open("leaked.txt", "w") as data:
-                    data.write(str(line))
-                    data.close()
-        # Sadly I'm not a developer :">
-        if len(list_of_leaked_creds) > 0:
-            myTeamsMessage.color("#B70000")
-            myTeamsMessage.title("Data Leak Found in Stealer Logs")
-            myTeamsMessage.text(f"Data leaked found: {list_of_leaked_creds} Please validate it, or create a ticket")
-            await myTeamsMessage.send()
+        with open(downloaded_files, "rb", encoding="ISO-8859-1") as data_leak_file:
+            for line in data_leak_file.readlines():
+                line = line.rstrip()
+                # Search keyword in the line if true then found the data that leaked
+                if search_keyword(line):
+                    logging.info(f"Data leaked found: {line}")
+                    list_of_leaked_creds.append(line)
+                    with open("leaked.txt", "w") as data:
+                        data.write(str(line))
+                        data.close()
+        number_of_leaked_creds_found = len(list_of_leaked_creds)
+        if number_of_leaked_creds_found > 0:
+            await send_ms_team_dataleak_found(list_of_leaked_creds)
         else:
-            myTeamsMessage.color("#0000FF")
-            myTeamsMessage.title("New Data Leak Downloaded")
-            myTeamsMessage.text(f"Comptuter Name: {platform.node()}   \nOperating Sytem: {platform.system()}   \nFile successfully downloaded at: " + str(downloaded_files)  +  "    \nChecking successfully and found nothing")
-            await myTeamsMessage.send()
+            await send_ms_team_dataleak_downloaded(downloaded_files)
             logging.info("Checking successfully and found nothing")
-            print("[*] Checking successfully and found nothing")
-        fileinput.close()
+    except UnicodeDecodeError:
+        logging.error(f"Error: Unable to read file {downloaded_files}. Skipping...")
     except Exception as e:
-        fileinput.close()
-        logging.info(f"output_monitored_data_leak error: {e}")
+        logging.error(f"output_monitored_data_leak error: {e}")
 
 
 def progress_bar(current, total):
-    print('Downloaded', current, 'out of', total, 'bytes: {:.2%}'.format(current / total))
+    print('Downloaded', current, 'out of', total,
+          'bytes: {:.2%}'.format(current / total))
 
 
 # This function detect message has telegram link and join that channel, if the link is not telegram, store it for
@@ -141,11 +147,11 @@ def detect_telegram_link(urls_list: list):
 
 
 def format_line(data):
-    # format_line() is use for filter and parse the stealer logs to nicely formatted event which is 
+    # format_line() is use for filter and parse the stealer logs to nicely formatted event which is
     # { "username": "", "password": "", "url": ""} and push this information to any SIEM
     def check_back_url(content):
         url_pattern = r'\w+\.(?:com|net|org|edu|gov|int|mil|biz|info|name|pro|aero|coop|museum|[a-z]{2})\b'
-        if re.match(url_pattern,content):
+        if re.match(url_pattern, content):
             return True
         return False
     event = {
@@ -155,7 +161,8 @@ def format_line(data):
     }
     line = str(data)
     if line.startswith("http") or line.startswith("www"):
-        match = re.search(r'(?P<url>https?://[^\s]+)?[: ](?P<username>[^:]+)?:(?P<password>[^:]+)?', line)
+        match = re.search(
+            r'(?P<url>https?://[^\s]+)?[: ](?P<username>[^:]+)?:(?P<password>[^:]+)?', line)
         if match:
             event["url"] = match.group('url')
             event["username"] = match.group('username')
@@ -164,7 +171,8 @@ def format_line(data):
         else:
             return line
     else:
-        match = re.search(r'(?P<username>[^:]+)?:(?P<password>[^:]+)?:(?P<url>[^\s]+)?', line)
+        match = re.search(
+            r'(?P<username>[^:]+)?:(?P<password>[^:]+)?:(?P<url>[^\s]+)?', line)
         if match:
             if check_back_url(match.group('username')):
                 event["url"] = match.group('username')
@@ -179,48 +187,25 @@ def format_line(data):
         else:
             return line
 
-def run_scheduler():
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
 
-
-async def daily_run_report():
-    print("[*] Start daily report")
-    lines_seen = set()
-    input_file = "./need_to_review_url.txt"
-    output_file = "daily_report.txt"
-    with open(output_file, 'w') as out_file:
-        with open(input_file, 'r') as in_file:
-            for line in in_file:
-                if line not in lines_seen:
-                    out_file.write(line)
-                    lines_seen.add(line)
-
-    myTeamsMessage.color("")
-    myTeamsMessage.title("Telegram monitoring daily statistic")
-    myTeamsMessage.text("")
-
-    return
-
-
-# TODO: Filter benign URL and duplicated
+# This need to be tested againa
 def filter_url(urls_list: list[str]):
-    black_list_domain = ["https://ift.tt/"]
-    # Remove duplicated line first
+    black_list_domains = ["https://ift.tt/"]
     if os.path.exists("need_to_review_url.txt"):
         with open("need_to_review_url.txt", "r") as data:
             review_url_list = data.readlines()
-            review_url_list = map(lambda s: s.strip(), review_url_list)  # Remove newline (\n) from reading the file
+            # Remove newline (\n) from reading the file
+            review_url_list = map(lambda s: s.strip(), review_url_list)
             for url in urls_list:
                 if url in review_url_list:
                     urls_list.remove(url)
                     logging.info(f"Removed duplicated URL: {url}")
-        # Remove black listed url from the list, which 
+        # Remove black listed url from the list, which
         for url in urls_list:
-            if url in black_list_domain:
-                urls_list.remove(url)
-                logging.info(f"Removed black listed URL: {url}")
+            for domain in black_list_domains:
+                if domain in url:
+                    urls_list.remove(url)
+                    logging.info(f"Removed black listed URL: {url}")
     return urls_list
 
 
@@ -265,44 +250,44 @@ async def handle_new_data_leak_message(event: Message):
     try:
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
-        
+
         # await join_telegram_channel(telegram_url)
         await store_review_url(review_url)
         if event.document is not None:
             print(event.message.media.document)
-            print("File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
-            file_name = str(event.message.media.document.attributes[0].file_name).lower()
-            
+            print(
+                "File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
+            file_name = str(
+                event.message.media.document.attributes[0].file_name).lower()
+
             # lower all char to normallize the data, this is the Linux file path
-            if file_name.endswith((".txt",".csv",".rar","zip")):
+            if file_name.endswith((".txt", ".csv", ".rar", "zip")):
                 if file_name.endswith(".rar"):
                     file_name = "leaked_rar/"+file_name
                 if file_name.endswith(".zip"):
                     file_name = "leaked_zip/"+file_name
                 # download path is in the .env file and the path should end with a splash "/" or "\\" base on the OS
                 leak_download_path = await client.download_media(event.message.media, f"{download_path}{file_name}")
-                
+
                 print(f"[*] File Name: {file_name}")
                 logging.info(f"File Name: {file_name}")
-                logging.info("File successfully downloaded at: " + str(leak_download_path))
+                logging.info("File successfully downloaded at: " +
+                             str(leak_download_path))
 
                 # Check whether the new data set just download has the monitored keyword
                 await output_monitored_data_leak(leak_download_path)
-                    
+
             else:
-                logging.info(f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
+                logging.info(
+                    f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
     except Exception as e:
         logging.error(f"Exception: {e}")
 
 
-# Start the infinite loop to wait for new messages	
+# Start the infinite loop to wait for new messages
 async def main():
     print("[*] Telegram monitoring starting")
     await client.run_until_disconnected()
-    # schedule.every().day.at("00:00").do(daily_run_report)
-    # scheduler_thread = threading.Thread(target=run_scheduler)
-    # scheduler_thread.start()
 
-# TODO: Learn how to Async IO work
 with client:
     client.loop.run_until_complete(main())
