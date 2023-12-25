@@ -101,7 +101,7 @@ async def send_ms_team_dataleak_downloaded(downloaded_files):
 async def output_monitored_data_leak(downloaded_files):
     # If the downloaded file extentions is .rar or .zip we pass we don't check the content of it
     if downloaded_files.endswith((".rar", ".zip")):
-        send_ms_team_dataleak_downloaded(downloaded_files)
+        await send_ms_team_dataleak_downloaded(downloaded_files)
         return
     try:
         logging.info("File downloaded and checking for data leak")
