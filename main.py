@@ -1,11 +1,11 @@
 from telethon import TelegramClient, events, sync
+from telethon import errors
 from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import Message
 import fileinput
 import logging
 import re
-import os
-import platform
+import os, time, platform
 from zipfile import ZipFile
 from rarfile import RarFile
 from os.path import join, dirname
@@ -280,6 +280,9 @@ async def handle_new_data_leak_message(event: Message):
             else:
                 logging.info(
                     f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
+    except errors.FloodWaitError as e:
+        print('Flood wait for ', e.seconds)
+        time.sleep(e.seconds)
     except Exception as e:
         logging.error(f"Exception: {e}")
 
