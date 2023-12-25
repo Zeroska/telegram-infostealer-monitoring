@@ -105,7 +105,7 @@ async def output_monitored_data_leak(downloaded_files):
     try:
         logging.info("File downloaded and checking for data leak")
         list_of_leaked_creds = []
-        with open(downloaded_files, "rb", encoding="ISO-8859-1") as data_leak_file:
+        with open(downloaded_files, "r", encoding="ISO-8859-1") as data_leak_file:
             for line in data_leak_file.readlines():
                 line = line.rstrip()
                 # Search keyword in the line if true then found the data that leaked
