@@ -2,7 +2,8 @@ from telethon import TelegramClient, events, sync
 from telethon import errors
 from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.tl.types import Message
-import fileinput
+import requests
+import json
 import logging
 import re
 import os, time, platform
@@ -11,7 +12,7 @@ from rarfile import RarFile
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pymsteams
-
+from checkKeyword import verifySend
 # Logging
 logging.basicConfig(
     format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO,
@@ -113,7 +114,7 @@ async def output_monitored_data_leak(downloaded_files):
                 if search_keyword(line):
                     logging.info(f"Data leaked found: {line}")
                     list_of_leaked_creds.append(line)
-                    with open("leaked.txt", "w") as data:
+                    with open("opswat_leaked.txt", "w") as data:
                         data.write(str(line))
                         data.close()
         number_of_leaked_creds_found = len(list_of_leaked_creds)
@@ -145,48 +146,6 @@ def detect_telegram_link(urls_list: list):
         else:
             url_need_to_be_review_list.append(url)
     return telegram_url_extracted_list, url_need_to_be_review_list
-
-
-def format_line(data):
-    # format_line() is use for filter and parse the stealer logs to nicely formatted event which is
-    # { "username": "", "password": "", "url": ""} and push this information to any SIEM
-    def check_back_url(content):
-        url_pattern = r'\w+\.(?:com|net|org|edu|gov|int|mil|biz|info|name|pro|aero|coop|museum|[a-z]{2})\b'
-        if re.match(url_pattern, content):
-            return True
-        return False
-    event = {
-        "username": "",
-        "password": "",
-        "url": "",
-    }
-    line = str(data)
-    if line.startswith("http") or line.startswith("www"):
-        match = re.search(
-            r'(?P<url>https?://[^\s]+)?[: ](?P<username>[^:]+)?:(?P<password>[^:]+)?', line)
-        if match:
-            event["url"] = match.group('url')
-            event["username"] = match.group('username')
-            event["password"] = match.group('password')
-            return event
-        else:
-            return line
-    else:
-        match = re.search(
-            r'(?P<username>[^:]+)?:(?P<password>[^:]+)?:(?P<url>[^\s]+)?', line)
-        if match:
-            if check_back_url(match.group('username')):
-                event["url"] = match.group('username')
-                event["username"] = match.group('password')
-                event["password"] = match.group('url')
-                return event
-            else:
-                event["url"] = match.group('url')
-                event["username"] = match.group('username')
-                event["password"] = match.group('password')
-                return event
-        else:
-            return line
 
 
 # This need to be tested againa
@@ -251,11 +210,12 @@ async def handle_new_data_leak_message(event: Message):
     try:
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
-
+        
         # await join_telegram_channel(telegram_url)
         await store_review_url(review_url)
         if event.document is not None:
             # lower all char to normallize the data, this is the Linux file path
+            file_name = event.message.media.document.attributes[0].file_name
             if file_name.endswith((".txt", ".csv", ".rar", "zip")):
                 if file_name.endswith(".rar"):
                     file_name = "leaked_rar/"+file_name
@@ -272,6 +232,8 @@ async def handle_new_data_leak_message(event: Message):
                 # Check whether the new data set just download has the monitored keyword
                 await output_monitored_data_leak(leak_download_path)
 
+                # Splunk Forwarding
+                await verifySend(leak_download_path)
             else:
                 logging.info(
                     f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
