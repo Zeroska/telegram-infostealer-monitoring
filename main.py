@@ -29,8 +29,8 @@ myTeamsMessage = pymsteams.async_connectorcard(webhook_url)
 
 if os.path.exists("monitored_wordlist.txt"):
     with open("monitored_wordlist.txt", "r") as keyword_list:
-        MONITORED_WORDLIST = keyword_list.readlines()
-        MONITORED_WORDLIST = map(lambda s: s.strip(), MONITORED_WORDLIST)
+        MONITORED_WORDLIST = keyword_list.read().splitlines()
+        print(MONITORED_WORDLIST)
 else:
     print(f"Please create monitored_wordlist.txt first before running this script")
     exit()
@@ -255,12 +255,6 @@ async def handle_new_data_leak_message(event: Message):
         # await join_telegram_channel(telegram_url)
         await store_review_url(review_url)
         if event.document is not None:
-            print(event.message.media.document)
-            print(
-                "File Name[0]: " + str(event.message.media.document.attributes[0].file_name))
-            file_name = str(
-                event.message.media.document.attributes[0].file_name).lower()
-
             # lower all char to normallize the data, this is the Linux file path
             if file_name.endswith((".txt", ".csv", ".rar", "zip")):
                 if file_name.endswith(".rar"):
@@ -281,9 +275,6 @@ async def handle_new_data_leak_message(event: Message):
             else:
                 logging.info(
                     f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
-    except errors.FloodWaitError as e:
-        print('Flood wait for ', e.seconds)
-        time.sleep(e.seconds)
     except Exception as e:
         logging.error(f"Exception: {e}")
 
