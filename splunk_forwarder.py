@@ -15,7 +15,7 @@ def sendEvent(event, source):
     try:
         jsonDict = {
             "event" : json.dumps(event),
-            "source" : f'{source[59:]}'
+            "source" : f'{source}'
         }
         r = requests.post(url,headers=authHeader,json=jsonDict, verify=False)
         if r.status_code==200:

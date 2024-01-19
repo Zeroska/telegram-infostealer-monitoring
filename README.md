@@ -38,6 +38,9 @@ api_id="your_app_id"
 phone_number = "your_phone_number"
 download_path="path"
 webhook_url='' # Add your URL Webhook right here, but use '' not ""
+splunk_host=''
+splunk_port=''
+splunk_token='' # This is HEC Token 
 ```
 **Download path is the path that you will store the leak data you crawl from the telegram channel**
 
@@ -47,6 +50,9 @@ Create a file name **monitored_wordlist.txt** and put your keyword to monitor fr
 @other_email
 some general keyword with newline (enter)
 ```
+## Using Docker
+
+
 
 ## Russian Info Stealer 
 
