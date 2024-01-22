@@ -1,13 +1,28 @@
 import re, json, os
-from splunk_forwarder import sendEvent
+from src.splunk_forwarder import sendEvent
 
 
-def checkKeyword(line):
-    keywords =["momo.vn","mservice.com.vn","cvs.vn", "mservice.io","momocdn.net","momoapp.vn"]
-    for key in keywords:
-        if key in line:
-            return True
-    return False
+def search_keyword(dataleak_line):
+    """
+    This function will return two value:
+        - The Bolean which show the the data leak is found or not
+        - Company name that has leak data
+    """
+    if os.path.exists("monitored_wordlist.txt"):
+        with open("monitored_wordlist.txt", "r") as keyword_list:
+            MONITORED_KEYWORD_LIST = keyword_list.read().splitlines()
+            print(MONITORED_KEYWORD_LIST)
+    else:
+        print(f"Please create monitored_wordlist.txt first before running this script")
+        exit()
+    
+    for monitored_key in MONITORED_KEYWORD_LIST: 
+        if monitored_key in dataleak_line:
+            if monitored_key in ["momo.vn","mservice.com.vn","cvs.vn","mservice.io","momocdn.net","momoapp.vn"]:
+                company_name = "Momo"
+                print(f"[*] Keyword detected {monitored_key}")
+        return True, company_name
+    return False, None
 
 
 class Parsing(object):
@@ -80,7 +95,8 @@ def verifySend(filepath):
     try:
         with open(filepath,'r', encoding='utf-8') as f:
             for line in f:
-                if checkKeyword(line):
+                found_dataleak, company_name = search_keyword(line)
+                if found_dataleak and company_name is not None:
                     a = Parsing(line.strip())
                     sendEvent(a.__dict__, filepath)
                 else:
@@ -89,7 +105,8 @@ def verifySend(filepath):
     except UnicodeDecodeError:
         with open(filepath,'r', encoding='latin-1') as f:
             for line in f:
-                if checkKeyword(line):
+                found_dataleak, company_name = search_keyword(line)
+                if found_dataleak and company_name is not None:
                     a = Parsing(line.strip())
                     sendEvent(a.__dict__, filepath)
                 else:

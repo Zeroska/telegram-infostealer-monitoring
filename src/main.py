@@ -7,12 +7,10 @@ import json
 import logging
 import re
 import os, time, platform
-from zipfile import ZipFile
-from rarfile import RarFile
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pymsteams
-from checkKeyword import verifySend
+from src.checkKeyword import verifySend
 # Logging
 logging.basicConfig(
     format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO,
@@ -28,57 +26,9 @@ download_path = os.getenv("download_path")
 webhook_url = os.getenv("webhook_url")
 myTeamsMessage = pymsteams.async_connectorcard(webhook_url)
 
-if os.path.exists("monitored_wordlist.txt"):
-    with open("monitored_wordlist.txt", "r") as keyword_list:
-        MONITORED_WORDLIST = keyword_list.read().splitlines()
-        print(MONITORED_WORDLIST)
-else:
-    print(f"Please create monitored_wordlist.txt first before running this script")
-    exit()
 
 # Start the client
 client = TelegramClient('anon', int(api_id), api_hash)
-
-
-def search_keyword(line):
-    for key in MONITORED_WORDLIST:
-        if key in line:
-            return True
-    return False
-
-
-def handle_zip(file_path):
-    try:
-        with ZipFile(file_path) as zip:
-            # Download path is global variable, extract to download_path
-            zip.extractall(download_path)
-        logging.info(f"ZIP extracted at: {download_path}")
-    except Exception as e:
-        logging.error(f"Error at handle_zip: {e}")
-
-
-def handle_rar(file_path):
-    try:
-        with RarFile(file_path) as rar:
-            if not rar.needs_password():
-                rar.extractall(download_path)
-        logging.info(f"RAR extracted at: {download_path}")
-    except Exception as e:
-        logging.error(f"Error at handle_rar: {e}")
-
-    # This function is used after the compressed file has download,
-
-
-def compress_file_handler(file_name: str, file_path: str):
-    if file_name.lower().endswith(".rar"):
-        logging.info(f"RAR file received: {file_name}")
-        # If rar, on Windows then using windows rar if they have it -> extract the file using the password if needed
-        handle_rar(file_path)
-    elif file_name.lower().endswith(".zip"):
-        logging.info(f"ZIP file received: {file_name}")
-        handle_zip(file_path)
-    else:
-        print("[*] Compressed file type not supported ")
 
 
 async def send_ms_team_dataleak_found(list_of_leaked_creds):
@@ -96,10 +46,8 @@ async def send_ms_team_dataleak_downloaded(downloaded_files):
         downloaded_files) + "    \nChecking successfully and found nothing")
     await myTeamsMessage.send()
 
-# You can disable this function as you pleases, if you send your log to another place
 
-
-async def output_monitored_data_leak(downloaded_files):
+async def search_monitored_keyword_in_data_leak(downloaded_files):
     # If the downloaded file extentions is .rar or .zip we pass we don't check the content of it
     if downloaded_files.endswith((".rar", ".zip")):
         await send_ms_team_dataleak_downloaded(downloaded_files)
@@ -210,7 +158,6 @@ async def handle_new_data_leak_message(event: Message):
     try:
         urls_list = contain_url_in_message(event)
         telegram_url, review_url = detect_telegram_link(urls_list)
-        
         # await join_telegram_channel(telegram_url)
         await store_review_url(review_url)
         if event.document is not None:
@@ -229,8 +176,7 @@ async def handle_new_data_leak_message(event: Message):
                 logging.info("File successfully downloaded at: " +
                              str(leak_download_path))
 
-                # Check whether the new data set just download has the monitored keyword
-                await output_monitored_data_leak(leak_download_path)
+                await search_monitored_keyword_in_data_leak(leak_download_path)
 
                 # Splunk Forwarding
                 await verifySend(leak_download_path)
