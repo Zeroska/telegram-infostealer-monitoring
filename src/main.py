@@ -10,7 +10,7 @@ import os, time, platform
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pymsteams
-from src.checkKeyword import verifySend
+from checkKeyword import verifySend, search_keyword
 # Logging
 logging.basicConfig(
     format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO,

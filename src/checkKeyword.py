@@ -1,5 +1,5 @@
 import re, json, os
-from src.splunk_forwarder import sendEvent
+from splunk_forwarder import sendEvent
 
 
 def search_keyword(dataleak_line):
