@@ -17,7 +17,7 @@ logging.basicConfig(
     filename="telegram_monitoring.log", encoding='utf-8')
 
 # Env Configuration
-dotenv_path = join(dirname(__file__), '.env')
+dotenv_path = join(dirname(__file__), '../.env')
 load_dotenv(dotenv_path)
 api_hash = os.getenv("api_hash")
 api_id = os.getenv("api_id")
