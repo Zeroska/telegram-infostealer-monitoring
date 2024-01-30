@@ -179,7 +179,7 @@ async def handle_new_data_leak_message(event: Message):
                 await search_monitored_keyword_in_data_leak(leak_download_path)
 
                 # Splunk Forwarding
-                await verifySend(leak_download_path)
+                verifySend(leak_download_path)
             else:
                 logging.info(
                     f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
