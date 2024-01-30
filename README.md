@@ -52,7 +52,17 @@ some general keyword with newline (enter)
 ```
 ## Using Docker
 
+Docker is easier to deploy because the dependecies won't be an issues and the code won't have to rely on the platform -> banana code could run fine :"> 
 
+```shell
+docker build -t telegram-monitoring .
+```
+
+```shell
+docker run -it telegram-monitoring 
+```
+
+It will prompt you to "Please enter your phone (or bot token):" you need to enter your phone number and then provide the script with the code that has been send to your Telegram account
 
 ## Russian Info Stealer 
 
