@@ -1,5 +1,5 @@
 import re, json, os
-from src.splunk_forwarder import sendEvent
+from splunk_forwarder import sendEvent
 
 
 def search_keyword(dataleak_line):
@@ -103,7 +103,6 @@ def verifySend(filepath):
                     sendEvent(a.__dict__, filepath)
                 else:
                     continue
-        os.remove(filepath)
     except UnicodeDecodeError:
         with open(filepath,'r', encoding='latin-1') as f:
             for line in f:
@@ -113,7 +112,6 @@ def verifySend(filepath):
                     sendEvent(a.__dict__, filepath)
                 else:
                     continue
-        os.remove(filepath)
     except Exception as e:
         print(f'[!]Error in VerifySend: {e}')
 

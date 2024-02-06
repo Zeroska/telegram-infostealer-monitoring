@@ -10,14 +10,14 @@ import os, time, platform
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pymsteams
-from src.checkKeyword import verifySend, search_keyword
+from checkKeyword import verifySend, search_keyword
 # Logging
 logging.basicConfig(
     format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO,
     filename="telegram_monitoring.log", encoding='utf-8')
 
 # Env Configuration
-dotenv_path = join(dirname(__file__), '.env')
+dotenv_path = join(dirname(__file__), '../.env')
 load_dotenv(dotenv_path)
 api_hash = os.getenv("api_hash")
 api_id = os.getenv("api_id")
@@ -181,7 +181,7 @@ async def handle_new_data_leak_message(event: Message):
                 await search_monitored_keyword_in_data_leak(leak_download_path)
 
                 # Splunk Forwarding
-                await verifySend(leak_download_path)
+                verifySend(leak_download_path)
             else:
                 logging.info(
                     f"[*] New Media but not .txt, .csv, .rar, .zip: {file_name}")
