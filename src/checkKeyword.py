@@ -93,6 +93,8 @@ class Parsing(object):
         
 def verifySend(filepath):
     try:
+        # TODO: Should we change the encoding to ISO-8859-1 as far as I concern that encoding is better suit 
+        # than the utf-8
         with open(filepath,'r', encoding='utf-8') as f:
             for line in f:
                 found_dataleak, company_name = search_keyword(line)

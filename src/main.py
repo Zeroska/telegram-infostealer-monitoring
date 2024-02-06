@@ -10,7 +10,7 @@ import os, time, platform
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pymsteams
-from src.checkKeyword import verifySend
+from src.checkKeyword import verifySend, search_keyword
 # Logging
 logging.basicConfig(
     format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO,
@@ -59,7 +59,9 @@ async def search_monitored_keyword_in_data_leak(downloaded_files):
             for line in data_leak_file.readlines():
                 line = line.rstrip()
                 # Search keyword in the line if true then found the data that leaked
-                if search_keyword(line):
+                found_dataleak, company_name = search_keyword(line)
+                print(f"[*] Company Name: {company_name}")
+                if found_dataleak and company_name is not None:
                     logging.info(f"Data leaked found: {line}")
                     list_of_leaked_creds.append(line)
                     with open("opswat_leaked.txt", "w") as data:
